@@ -1,0 +1,2313 @@
+<!DOCTYPE html>
+<html lang="en" style="height: auto; min-height: 100%;">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Creator - Editorial Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Merriweather:wght@300;400;700;900&family=Open+Sans:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @media print {
+            @page { 
+                size: A4; 
+                margin: 0; 
+            }
+            * { 
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+                color-adjust: exact !important; 
+            }
+            body { 
+                margin: 0 !important; 
+                padding: 0 !important; 
+                background: white !important; 
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            #newsletter-page { 
+                transform: none !important; 
+                box-shadow: none !important; 
+                margin: 0 !important; 
+                width: 210mm !important; 
+                min-height: 297mm !important; 
+                page-break-after: always; 
+            }
+            .preview-container { 
+                padding: 0 !important; 
+                background: white !important; 
+                display: block !important; 
+            }
+            #editor-panel { 
+                display: none !important; 
+            }
+            #preview-panel { 
+                width: 100% !important; 
+                display: block !important; 
+                padding: 0 !important;
+                background: white !important;
+            }
+            .article-content-columns { 
+                column-count: 2; 
+                column-gap: 30px; 
+            }
+            .image-wrapper img { 
+                max-width: 100% !important; 
+                height: auto !important; 
+                display: block !important; 
+            }
+            .image-controls, .hero-delete-btn {
+                display: none !important;
+            }
+            #logo-container {
+                border: 4px solid white !important;
+            }
+        }
+        
+        .font-serif { font-family: 'Merriweather', serif; }
+        .font-sans { font-family: 'Open Sans', sans-serif; }
+        .font-display { font-family: 'Playfair Display', serif; }
+        .font-inter { font-family: 'Inter', sans-serif; }
+        
+        [contenteditable="true"]:focus { outline: 2px dashed #3b82f6; outline-offset: 4px; }
+        
+        .article-content-columns {
+            column-count: 2;
+            column-gap: 30px;
+            column-rule: 1px solid #d1d5db;
+            text-align: justify;
+            hyphens: auto;
+            -webkit-hyphens: auto;
+            -moz-hyphens: auto;
+        }
+        
+        .article-content-columns p {
+            margin-bottom: 1em;
+            text-align: justify;
+        }
+        
+        .drop-cap::first-letter {
+            float: left;
+            font-size: 4.5em;
+            line-height: 0.85;
+            margin: 0.05em 0.1em 0 0;
+            font-weight: bold;
+            font-family: 'Playfair Display', serif;
+        }
+        
+        .image-wrapper {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+            max-width: 100%;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        
+        .image-wrapper img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: block;
+        }
+        
+        .image-wrapper.float-left {
+            float: left;
+            margin-right: 20px;
+            margin-bottom: 10px;
+            max-width: 300px;
+        }
+        
+        .image-wrapper.float-right {
+            float: right;
+            margin-left: 20px;
+            margin-bottom: 10px;
+            max-width: 300px;
+        }
+        
+        .image-wrapper.full-width {
+            display: block;
+            float: none;
+            max-width: 100%;
+            margin: 20px 0;
+        }
+        
+        .image-wrapper.full-width img {
+            width: 100%;
+        }
+        
+        .image-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+            clear: both;
+        }
+        
+        .image-grid .image-wrapper {
+            margin: 0;
+            max-width: 100%;
+        }
+        
+        .image-grid .image-wrapper img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .image-controls {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            display: none;
+            gap: 5px;
+            flex-wrap: wrap;
+            background: rgba(0,0,0,0.8);
+            padding: 8px;
+            border-radius: 6px;
+            z-index: 10;
+        }
+        
+        .image-wrapper:hover .image-controls {
+            display: flex;
+        }
+        
+        .image-control-btn {
+            background: white;
+            color: #333;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .image-control-btn:hover {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .newsletter-card {
+            transition: all 0.3s ease;
+        }
+        
+        .newsletter-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.15);
+        }
+        
+        .status-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+        
+        .green-bar {
+            height: 8px;
+            background: linear-gradient(90deg, #166534 0%, #15803d 100%);
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .newsletter-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+        
+        .newsletter-table thead {
+            background: #166534;
+            color: white;
+        }
+        
+        .newsletter-table th {
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+        }
+        
+        .newsletter-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .newsletter-table tbody tr:hover {
+            background: #f9fafb;
+        }
+        
+        .newsletter-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .newsletter-table th[contenteditable="true"]:focus,
+        .newsletter-table td[contenteditable="true"]:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: -2px;
+            background: #eff6ff;
+        }
+        
+        .table-wrapper {
+            position: relative;
+            margin: 20px 0;
+            clear: both;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
+
+        .table-label {
+            font-weight: bold;
+            color: #1f2937;
+            font-size: 16px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .table-title {
+            font-weight: bold;
+            color: #1f2937;
+            font-size: 18px;
+            margin-bottom: 12px;
+        }
+        
+        .table-title[contenteditable="true"]:focus {
+            outline: 2px dashed #3b82f6;
+            outline-offset: 4px;
+        }
+        
+        .hero-delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+            z-index: 10;
+            opacity: 0;
+        }
+        
+        #hero-image-container:hover .hero-delete-btn {
+            opacity: 1;
+        }
+        
+        .hero-delete-btn:hover {
+            background: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .theme-color-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .theme-color-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .theme-color-btn.active {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+        
+        .theme-color-btn.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .save-notification {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .text-editor-toolbar {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        
+        .toolbar-btn {
+            padding: 6px 10px;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            color: #374151;
+        }
+        
+        .toolbar-btn:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .toolbar-btn.active {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .toolbar-separator {
+            width: 1px;
+            background: #d1d5db;
+            margin: 0 4px;
+        }
+
+        .template-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .template-card:hover {
+            border-color: #3b82f6;
+            transform: scale(1.02);
+        }
+        
+        .template-card.selected {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            font-weight: 600;
+            color: #6b7280;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .tab-btn:hover {
+            color: #3b82f6;
+        }
+        
+        .tab-btn.active {
+            color: #3b82f6;
+            border-bottom-color: #3b82f6;
+        }
+
+        .article-section {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            position: relative;
+        }
+        
+        .article-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .article-controls {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .layout-toggle {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .layout-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .layout-btn:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+        
+        .layout-btn.active {
+            border-color: #10b981;
+            background: #f0fdf4;
+            color: #166534;
+        }
+
+        .section-control-btn {
+            background: white;
+            color: #333;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            border: 1px solid #d1d5db;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .section-control-btn:hover {
+            background: #3b82f6;
+            color: white;
+            border-color: #3b82f6;
+        }
+        
+        .section-control-btn.delete:hover {
+            background: #ef4444;
+            border-color: #ef4444;
+        }
+
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-box {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 48px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .login-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .logo-resize-controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .logo-size-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #374151;
+        }
+
+        .logo-size-btn:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+            color: #3b82f6;
+        }
+
+        .logo-size-btn.active {
+            border-color: #10b981;
+            background: #f0fdf4;
+            color: #166534;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-inter" style="height: auto; min-height: 100%;">
+
+    <div id="save-notification" class="save-notification">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span id="notification-text">Saved successfully!</span>
+    </div>
+
+    <div id="login-view" class="login-container">
+        <div class="login-box">
+            <div class="text-center mb-8">
+                <div class="inline-block p-4 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full mb-4">
+                    <i class="fas fa-newspaper text-white text-4xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-800 mb-2">Newsletter Creator</h1>
+                <p class="text-gray-600">Sign in to continue</p>
+            </div>
+
+            <div id="error-message" class="error-message">
+                <i class="fas fa-exclamation-circle mr-2"></i>
+                <span id="error-text">Invalid email or password</span>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="email" id="login-email" class="login-input pl-12" placeholder="Enter your email" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="password" id="login-password" class="login-input pl-12" placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Sign In
+                </button>
+            </form>
+
+            <div class="mt-6 text-center">
+                <p class="text-sm text-gray-500">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Demo: jrnagara@gmail.com / @jafar123
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div id="homepage-view" class="hidden">
+        <div class="min-h-screen">
+            <div class="bg-gradient-to-r from-green-700 to-green-600 text-white">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                        <div>
+                            <div class="flex items-center gap-3 mb-3">
+                                <i class="fas fa-newspaper text-4xl"></i>
+                                <h1 class="text-4xl sm:text-5xl font-display font-bold">Newsletter Creator</h1>
+                            </div>
+                            <p class="text-green-100 font-inter text-base sm:text-lg">Create beautiful editorial newsletters</p>
+                        </div>
+                        <div class="flex gap-3">
+                            <button onclick="showTemplateModal()" class="bg-white hover:bg-green-50 text-green-700 px-8 py-4 rounded-lg font-bold transition flex items-center justify-center gap-3 shadow-xl text-lg">
+                                <i class="fas fa-plus-circle text-xl"></i>
+                                <span>Create Newsletter</span>
+                            </button>
+                            <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-4 rounded-lg font-bold transition flex items-center justify-center gap-2 shadow-xl">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Logout</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <div class="flex flex-col md:flex-row gap-4 items-center">
+                        <div class="flex-1 relative w-full">
+                            <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                            <input type="text" id="searchInput" placeholder="Search newsletters by title, date, or volume..." class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" oninput="filterNewsletters()">
+                        </div>
+                        <select id="sortSelect" onchange="sortNewsletters()" class="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                            <option value="date-desc">Newest First</option>
+                            <option value="date-asc">Oldest First</option>
+                            <option value="title-asc">Title A-Z</option>
+                            <option value="title-desc">Title Z-A</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Your Newsletters</h2>
+                    <p class="text-gray-600">Manage and edit your newsletter collection</p>
+                </div>
+
+                <div id="newsletter-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+
+                <div id="empty-state" class="text-center py-16">
+                    <i class="fas fa-newspaper text-gray-300 text-6xl mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-600 mb-2">No newsletters yet</h3>
+                    <p class="text-gray-500 mb-6">Create your first newsletter to get started</p>
+                    <button onclick="showTemplateModal()" class="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg font-semibold transition inline-flex items-center gap-2">
+                        <i class="fas fa-plus"></i>
+                        <span>Create Newsletter</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="template-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-4xl w-full p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-3xl font-bold text-gray-900 mb-2">Choose a Template</h3>
+                    <p class="text-gray-600">Select a template to start creating your newsletter</p>
+                </div>
+                <button onclick="closeTemplateModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="template-card bg-white rounded-lg shadow-md p-6 border-2" onclick="selectTemplate('classic')">
+                    <div class="w-full h-48 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg mb-4 flex items-center justify-center">
+                        <i class="fas fa-newspaper text-white text-6xl"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Classic Newsletter</h4>
+                    <p class="text-sm text-gray-600">Traditional layout with header and sidebar</p>
+                </div>
+
+                <div class="template-card bg-white rounded-lg shadow-md p-6 border-2" onclick="selectTemplate('editorial')">
+                    <div class="w-full h-48 bg-gradient-to-br from-green-500 to-green-700 rounded-lg mb-4 flex items-center justify-center">
+                        <i class="fas fa-columns text-white text-6xl"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Editorial Style</h4>
+                    <p class="text-sm text-gray-600">Two-column layout with drop caps and dividers</p>
+                </div>
+
+                <div class="template-card bg-white rounded-lg shadow-md p-6 border-2" onclick="selectTemplate('modern')">
+                    <div class="w-full h-48 bg-gradient-to-br from-purple-500 to-purple-700 rounded-lg mb-4 flex items-center justify-center">
+                        <i class="fas fa-layer-group text-white text-6xl"></i>
+                    </div>
+                    <h4 class="font-bold text-lg mb-2">Modern Design</h4>
+                    <p class="text-sm text-gray-600">Clean, contemporary layout with bold typography</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="save-draft-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i class="fas fa-save text-blue-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Save Draft</h3>
+                    <p class="text-sm text-gray-600">Give your newsletter a name</p>
+                </div>
+            </div>
+            <div class="mb-6">
+                <label class="block text-sm font-bold text-gray-700 mb-2">Draft Name</label>
+                <input type="text" id="draftNameInput" placeholder="e.g., Weekly Newsletter - December 2025" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div class="flex gap-3">
+                <button onclick="closeSaveDraftModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                <button onclick="confirmSaveDraft()" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">Delete Newsletter</h3>
+                    <p class="text-sm text-gray-600">This action cannot be undone</p>
+                </div>
+            </div>
+            <p class="text-gray-700 mb-6">Are you sure you want to delete this newsletter? All content will be permanently removed.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition">Cancel</button>
+                <button onclick="confirmDelete()" class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="editor-view" class="hidden">
+        <nav class="bg-white border-b border-gray-200 shadow-sm no-print sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-3">
+                        <button onclick="backToHome()" class="text-gray-600 hover:text-gray-900 mr-2">
+                            <i class="fas fa-arrow-left text-xl"></i>
+                        </button>
+                        <i class="fas fa-newspaper text-green-600 text-2xl"></i>
+                        <h1 class="text-xl font-bold text-gray-800" id="editor-title">Newsletter Creator</h1>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="switchToTab('editor')" id="tab-editor-btn" class="tab-btn active">
+                            <i class="fas fa-edit mr-2"></i>Editor
+                        </button>
+                        <button onclick="switchToTab('preview')" id="tab-preview-btn" class="tab-btn">
+                            <i class="fas fa-eye mr-2"></i>Preview
+                        </button>
+                        <div class="h-8 w-px bg-gray-300 mx-2"></div>
+                        <button onclick="showSaveDraftModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition flex items-center gap-2">
+                            <i class="fas fa-save"></i><span class="hidden md:inline">Save Draft</span>
+                        </button>
+                        <button onclick="printNewsletter()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition flex items-center gap-2">
+                            <i class="fas fa-print"></i><span class="hidden md:inline">Print</span>
+                        </button>
+                        <button onclick="downloadPDF()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition flex items-center gap-2">
+                            <i class="fas fa-file-pdf"></i><span class="hidden md:inline">Save PDF</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="flex">
+            
+            <div id="editor-panel" class="w-full lg:w-96 bg-white border-r border-gray-200 shadow-lg no-print flex-shrink-0 z-40 overflow-y-auto" style="max-height: calc(100vh - 64px);">
+                <div class="p-6 space-y-6">
+                    
+                    <div class="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4">
+                        <h3 class="font-bold text-green-800 text-sm mb-2 flex items-center gap-2">
+                            <i class="fas fa-lightbulb"></i>Quick Tips
+                        </h3>
+                        <ul class="text-xs text-gray-700 space-y-1">
+                            <li>• Click any text in preview to edit directly</li>
+                            <li>• Tables use CSV format for easy data entry</li>
+                            <li>• Hover over images to see controls</li>
+                            <li>• Choose single or two-column layout</li>
+                            <li>• Use Print button for best results</li>
+                        </ul>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">School Name</label>
+                        <input type="text" id="schoolName" placeholder="Enter school name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" oninput="updatePreview()">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Newsletter Title</label>
+                        <input type="text" id="newsletterTitle" placeholder="e.g., Monthly Newsletter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" oninput="updatePreview()">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Date</label>
+                            <input type="text" id="issueDate" placeholder="September 2024" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" oninput="updatePreview()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-2">Issue #</label>
+                            <input type="text" id="issueNumber" placeholder="42" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" oninput="updatePreview()">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">School Badge/Logo</label>
+                        <input type="file" id="logoUpload" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        
+                        <div class="mt-3">
+                            <label class="block text-xs font-semibold text-gray-600 mb-2">Badge Size:</label>
+                            <div class="logo-resize-controls">
+                                <button onclick="setLogoSize('small')" class="logo-size-btn" data-size="small">
+                                    <i class="fas fa-compress-alt mr-1"></i>Small (80px)
+                                </button>
+                                <button onclick="setLogoSize('medium')" class="logo-size-btn active" data-size="medium">
+                                    <i class="fas fa-expand-alt mr-1"></i>Medium (120px)
+                                </button>
+                                <button onclick="setLogoSize('large')" class="logo-size-btn" data-size="large">
+                                    <i class="fas fa-expand-arrows-alt mr-1"></i>Large (160px)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-sm font-bold text-gray-700">Featured Headline</label>
+                            <label class="flex items-center cursor-pointer">
+                                <input type="checkbox" id="enableHeadline" class="mr-2" onchange="toggleHeadline()">
+                                <span class="text-xs text-gray-600">Enable</span>
+                            </label>
+                        </div>
+                        <div id="headline-controls" class="hidden space-y-2">
+                            <input type="text" id="headlineText" placeholder="Enter headline text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" oninput="updatePreview()">
+                            <input type="text" id="subheadlineText" placeholder="Enter subheadline (optional)" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" oninput="updatePreview()">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Hero Image (Optional)</label>
+                        <input type="file" id="heroUpload" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100">
+                        <p class="text-xs text-gray-500 mt-1">Hover over image in preview to delete</p>
+                    </div>
+
+                    <div class="border-t border-gray-200 pt-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-bold text-gray-800">Article Sections</h3>
+                            <button onclick="addArticleSection()" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-semibold transition flex items-center gap-2">
+                                <i class="fas fa-plus"></i>Add Article
+                            </button>
+                        </div>
+                        <div id="articles-container"></div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Events Section Title</label>
+                        <input type="text" id="eventsSectionTitle" placeholder="e.g., Upcoming Events" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 mb-3" oninput="updatePreview()">
+                        
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Events</label>
+                        <div id="eventsContainer" class="space-y-3">
+                            <div class="event-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                <input type="text" placeholder="Event date" class="event-date w-full px-3 py-1 text-sm border border-gray-300 rounded mb-2" oninput="updatePreview()">
+                                <input type="text" placeholder="Event name" class="event-name w-full px-3 py-1 text-sm border border-gray-300 rounded mb-2" oninput="updatePreview()">
+                                <input type="text" placeholder="Event details" class="event-details w-full px-3 py-1 text-sm border border-gray-300 rounded" oninput="updatePreview()">
+                            </div>
+                        </div>
+                        <button onclick="addEvent()" class="mt-3 w-full py-2 bg-blue-100 text-blue-700 rounded-lg text-sm font-semibold hover:bg-blue-200 transition">
+                            <i class="fas fa-plus mr-2"></i>Add Event
+                        </button>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Contact Information</label>
+                        <input type="text" id="contactPhone" placeholder="Phone number" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 mb-2" oninput="updatePreview()">
+                        <input type="text" id="contactWebsite" placeholder="Website" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 mb-2" oninput="updatePreview()">
+                        <input type="text" id="contactAddress" placeholder="Address" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" oninput="updatePreview()">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-3">Theme Color</label>
+                        <div class="grid grid-cols-4 gap-3">
+                            <button onclick="setThemeColor('#1e3a8a')" class="theme-color-btn active" style="background: #1e3a8a;" data-color="#1e3a8a"></button>
+                            <button onclick="setThemeColor('#7f1d1d')" class="theme-color-btn" style="background: #7f1d1d;" data-color="#7f1d1d"></button>
+                            <button onclick="setThemeColor('#064e3b')" class="theme-color-btn" style="background: #064e3b;" data-color="#064e3b"></button>
+                            <button onclick="setThemeColor('#312e81')" class="theme-color-btn" style="background: #312e81;" data-color="#312e81"></button>
+                            <button onclick="setThemeColor('#7c2d12')" class="theme-color-btn" style="background: #7c2d12;" data-color="#7c2d12"></button>
+                            <button onclick="setThemeColor('#4c1d95')" class="theme-color-btn" style="background: #4c1d95;" data-color="#4c1d95"></button>
+                            <button onclick="setThemeColor('#831843')" class="theme-color-btn" style="background: #831843;" data-color="#831843"></button>
+                            <button onclick="setThemeColor('#0c4a6e')" class="theme-color-btn" style="background: #0c4a6e;" data-color="#0c4a6e"></button>
+                        </div>
+                        <div class="mt-3">
+                            <label class="block text-xs font-semibold text-gray-600 mb-2">Custom Color:</label>
+                            <input type="color" id="customTheme" onchange="setThemeColor(this.value)" class="w-full h-12 rounded-lg border-2 border-gray-300 cursor-pointer">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="preview-panel" class="flex-1 bg-gray-200 flex justify-center items-start p-4 lg:p-8 preview-container">
+                <div id="newsletter-page" class="bg-white shadow-2xl transition-all duration-300" style="width: 210mm; min-height: 297mm;">
+                    <div class="flex flex-col" style="min-height: 297mm;">
+                        <header id="header-section" class="p-8 text-white relative overflow-hidden" style="background-color: #1e3a8a;">
+                            <div class="absolute -top-10 -right-10 w-40 h-40 bg-white opacity-10 rounded-full"></div>
+                            <div class="absolute top-20 right-20 w-20 h-20 bg-white opacity-5 rounded-full"></div>
+                            <div class="flex items-center gap-6 relative z-10">
+                                <div id="logo-container" class="rounded-full border-4 border-white bg-white/20 flex items-center justify-center overflow-hidden shadow-lg transition-all duration-300" style="width: 120px; height: 120px; flex-shrink: 0;">
+                                    <i class="fas fa-school text-white text-4xl"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <h1 id="school-name-display" class="text-4xl font-serif font-bold mb-1" contenteditable="true" onblur="syncFromPreview('schoolName', this.textContent)">Your School Name</h1>
+                                    <h2 id="newsletter-title-display" class="text-lg font-sans font-light opacity-90 uppercase tracking-wide" contenteditable="true" onblur="syncFromPreview('newsletterTitle', this.textContent)">NEWSLETTER</h2>
+                                </div>
+                                <div class="text-right border-l border-white/30 pl-6">
+                                    <p id="issue-date-display" class="text-sm font-bold uppercase tracking-wider mb-1" contenteditable="true" onblur="syncFromPreview('issueDate', this.textContent)">MONTH YEAR</p>
+                                    <p class="text-xs opacity-80">Issue <span id="issue-number-display" contenteditable="true" onblur="syncFromPreview('issueNumber', this.textContent)">#</span></p>
+                                </div>
+                            </div>
+                        </header>
+
+                        <div class="flex flex-col md:flex-row flex-1">
+                            <div id="main-content-area" class="w-full md:w-2/3 p-8">
+                                <div id="headline-section" class="mb-6 pb-6 border-b-2 border-gray-200 hidden">
+                                    <h2 id="headline-display" class="font-serif text-3xl font-bold mb-2 text-gray-900" contenteditable="true" onblur="syncFromPreview('headlineText', this.textContent)"></h2>
+                                    <p id="subheadline-display" class="font-sans text-lg text-gray-600 italic" contenteditable="true" onblur="syncFromPreview('subheadlineText', this.textContent)"></p>
+                                </div>
+                                
+                                <div id="hero-image-container" class="mb-8 hidden relative">
+                                    <button onclick="deleteHeroImage()" class="hero-delete-btn no-print">
+                                        <i class="fas fa-trash mr-1"></i>Delete Image
+                                    </button>
+                                    <img id="hero-image" class="w-full h-64 object-cover rounded-lg shadow-md">
+                                </div>
+                                
+                                <div id="articles-display-container"></div>
+                            </div>
+
+                            <div id="events-sidebar" class="w-full md:w-1/3 bg-gray-50 p-8 border-l border-gray-100 hidden">
+                                <div class="mb-8">
+                                    <h4 id="events-title-display" class="font-bold text-gray-900 uppercase tracking-wider text-sm mb-4 flex items-center" contenteditable="true" onblur="syncFromPreview('eventsSectionTitle', this.textContent)">
+                                        <span class="w-2 h-2 rounded-full mr-2" style="background-color: #fbbf24;"></span>
+                                        Upcoming Events
+                                    </h4>
+                                    <div id="events-list-display" class="space-y-4"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <footer id="footer-section" class="p-6 text-white mt-auto" style="background-color: #1e3a8a;">
+                            <div class="flex flex-col md:flex-row justify-between items-center text-xs opacity-90 gap-2">
+                                <div id="contact-phone-display"></div>
+                                <div id="contact-website-display"></div>
+                                <div id="contact-address-display"></div>
+                            </div>
+                        </footer>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="table-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-900 mb-1">Add Table</h3>
+                    <p class="text-sm text-gray-600">Use CSV format for easy table creation</p>
+                </div>
+                <button onclick="closeTableModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Table Title</label>
+                    <input type="text" id="csvTableTitle" placeholder="e.g., Fees Schedule 2025" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Headers (comma separated)</label>
+                    <input type="text" id="csvHeaders" placeholder="Item, Amount, Status" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-lg">
+                    <p class="text-xs text-gray-500 mt-1">Separate headers with commas</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Rows (CSV format, new line per row)</label>
+                    <textarea id="csvRows" rows="6" placeholder="Registration, 5000, Paid&#10;Tuition, 45000, Pending&#10;Books, 3000, Paid" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none text-lg font-mono"></textarea>
+                    <p class="text-xs text-gray-500 mt-1">Each row on a new line, values separated by commas</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-3">Table Header Color</label>
+                    <div class="grid grid-cols-6 gap-2">
+                        <button onclick="selectTableColor('#166534')" class="table-color-btn w-full h-12 rounded-lg border-3 border-blue-500 transition hover:scale-105" style="background: #166534;" data-color="#166534"></button>
+                        <button onclick="selectTableColor('#1e3a8a')" class="table-color-btn w-full h-12 rounded-lg border-3 border-transparent transition hover:scale-105" style="background: #1e3a8a;" data-color="#1e3a8a"></button>
+                        <button onclick="selectTableColor('#7f1d1d')" class="table-color-btn w-full h-12 rounded-lg border-3 border-transparent transition hover:scale-105" style="background: #7f1d1d;" data-color="#7f1d1d"></button>
+                        <button onclick="selectTableColor('#312e81')" class="table-color-btn w-full h-12 rounded-lg border-3 border-transparent transition hover:scale-105" style="background: #312e81;" data-color="#312e81"></button>
+                        <button onclick="selectTableColor('#7c2d12')" class="table-color-btn w-full h-12 rounded-lg border-3 border-transparent transition hover:scale-105" style="background: #7c2d12;" data-color="#7c2d12"></button>
+                        <button onclick="selectTableColor('#831843')" class="table-color-btn w-full h-12 rounded-lg border-3 border-transparent transition hover:scale-105" style="background: #831843;" data-color="#831843"></button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-8">
+                <button onclick="closeTableModal()" class="flex-1 px-6 py-3 border-2 border-gray-300 rounded-lg font-bold text-gray-700 hover:bg-gray-50 transition text-lg">Cancel</button>
+                <button onclick="insertCSVTable()" class="flex-1 px-6 py-3 bg-green-700 hover:bg-green-800 text-white rounded-lg font-bold transition text-lg">
+                    <i class="fas fa-plus mr-2"></i>Add Table
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="hidden-image-upload" accept="image/*" style="display: none;">
+    <input type="file" id="hidden-grid-upload" accept="image/*" multiple style="display: none;">
+
+    <script>
+        const VALID_EMAIL = 'jrnagara@gmail.com';
+        const VALID_PASSWORD = '@jafar123';
+        
+        let currentTheme = '#1e3a8a';
+        let logoDataUrl = null;
+        let heroDataUrl = null;
+        let currentImagePosition = 'left';
+        let deleteTargetId = null;
+        let selectedTableColor = '#166534';
+        let currentNewsletterId = null;
+        let currentTab = 'editor';
+        let articleCounter = 0;
+        let currentArticleId = null;
+        let currentTableArticleId = null;
+        let isLoggedIn = false;
+        let currentLogoSize = 'medium';
+        let tableCounter = 0;
+        let articleDataStore = {};
+
+        function checkAuth() {
+            const authStatus = sessionStorage.getItem('newsletter_auth');
+            if (authStatus === 'authenticated') {
+                isLoggedIn = true;
+                showHomepage();
+            } else {
+                isLoggedIn = false;
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('homepage-view').classList.add('hidden');
+            document.getElementById('editor-view').classList.add('hidden');
+        }
+
+        function showHomepage() {
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('homepage-view').classList.remove('hidden');
+            document.getElementById('editor-view').classList.add('hidden');
+            loadNewslettersFromStorage();
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            if (email === VALID_EMAIL && password === VALID_PASSWORD) {
+                sessionStorage.setItem('newsletter_auth', 'authenticated');
+                isLoggedIn = true;
+                showHomepage();
+                showNotification('Login successful! Welcome back.', 'success');
+            } else {
+                const errorDiv = document.getElementById('error-message');
+                const errorText = document.getElementById('error-text');
+                errorText.textContent = 'Invalid email or password. Please try again.';
+                errorDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('newsletter_auth');
+            isLoggedIn = false;
+            showLogin();
+            showNotification('Logged out successfully', 'success');
+        }
+
+        function setLogoSize(size) {
+            currentLogoSize = size;
+            const logoContainer = document.getElementById('logo-container');
+            
+            document.querySelectorAll('.logo-size-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const activeBtn = document.querySelector(`.logo-size-btn[data-size="${size}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+            }
+            
+            let iconSize = '3xl';
+            if (size === 'small') {
+                logoContainer.style.width = '80px';
+                logoContainer.style.height = '80px';
+                iconSize = '2xl';
+            } else if (size === 'medium') {
+                logoContainer.style.width = '120px';
+                logoContainer.style.height = '120px';
+                iconSize = '4xl';
+            } else if (size === 'large') {
+                logoContainer.style.width = '160px';
+                logoContainer.style.height = '160px';
+                iconSize = '5xl';
+            }
+            
+            const icon = logoContainer.querySelector('i');
+            if (icon) {
+                icon.className = `fas fa-school text-white text-${iconSize}`;
+            }
+        }
+
+        function deleteHeroImage() {
+            heroDataUrl = null;
+            document.getElementById('hero-image-container').classList.add('hidden');
+            document.getElementById('hero-image').src = '';
+            document.getElementById('heroUpload').value = '';
+            showNotification('Hero image deleted successfully!', 'success');
+        }
+
+        function loadNewslettersFromStorage() {
+            const grid = document.getElementById('newsletter-grid');
+            const emptyState = document.getElementById('empty-state');
+            grid.innerHTML = '';
+            
+            const newsletters = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('newsletter_')) {
+                    const data = JSON.parse(localStorage.getItem(key));
+                    newsletters.push(data);
+                }
+            }
+            
+            if (newsletters.length === 0) {
+                emptyState.classList.remove('hidden');
+                grid.classList.add('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                grid.classList.remove('hidden');
+                
+                newsletters.forEach(newsletter => {
+                    const card = createNewsletterCard(newsletter);
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        function createNewsletterCard(data) {
+            const card = document.createElement('div');
+            card.className = 'newsletter-card bg-white rounded-lg shadow-md overflow-hidden relative';
+            card.setAttribute('data-id', data.id);
+            card.setAttribute('data-date', data.savedAt || new Date().toISOString());
+            card.setAttribute('data-title', data.draftName || 'Untitled');
+            
+            const statusColor = data.status === 'published' ? '#10b981' : '#fbbf24';
+            
+            card.innerHTML = `
+                <div class="green-bar"></div>
+                <div class="status-badge" style="background: ${statusColor};"></div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <p class="text-xs font-bold text-green-700 uppercase tracking-wider mb-2">${data.issueNumber || 'NO ISSUE'}</p>
+                        <h3 class="text-xl font-display font-bold text-gray-900 mb-2">${data.draftName || 'Untitled Newsletter'}</h3>
+                        <div class="flex items-center text-sm text-gray-500 mb-3">
+                            <i class="far fa-calendar mr-2"></i>
+                            <span>${new Date(data.savedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 ${data.status === 'published' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'} text-xs font-semibold rounded">${data.status === 'published' ? 'Published' : 'Draft'}</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                        <button onclick="openEditor(${data.id})" class="text-green-700 hover:text-green-800 font-semibold text-sm flex items-center gap-2 transition">
+                            <i class="fas fa-edit"></i>
+                            <span>Edit</span>
+                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="duplicateNewsletter(${data.id})" class="text-gray-400 hover:text-blue-600 transition" title="Duplicate">
+                                <i class="far fa-copy"></i>
+                            </button>
+                            <button onclick="deleteNewsletter(${data.id})" class="text-gray-400 hover:text-red-600 transition" title="Delete">
+                                <i class="far fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        function showTemplateModal() {
+            document.getElementById('template-modal').classList.remove('hidden');
+        }
+
+        function closeTemplateModal() {
+            document.getElementById('template-modal').classList.add('hidden');
+        }
+
+        function selectTemplate(template) {
+            closeTemplateModal();
+            createNewNewsletter(template);
+        }
+
+        function createNewNewsletter(template = 'classic') {
+            currentNewsletterId = Date.now();
+            articleDataStore = {};
+            document.getElementById('homepage-view').classList.add('hidden');
+            document.getElementById('editor-view').classList.remove('hidden');
+            clearEditorForm();
+            addArticleSection(null, template === 'editorial');
+            switchToTab('editor');
+            updatePreview();
+            showNotification('New newsletter created! Start editing.', 'success');
+        }
+
+        function openEditor(id) {
+            currentNewsletterId = id;
+            articleDataStore = {};
+            document.getElementById('homepage-view').classList.add('hidden');
+            document.getElementById('editor-view').classList.remove('hidden');
+            loadNewsletterData(id);
+            switchToTab('editor');
+            setTimeout(() => updatePreview(), 100);
+        }
+
+        function backToHome() {
+            document.getElementById('editor-view').classList.add('hidden');
+            document.getElementById('homepage-view').classList.remove('hidden');
+            loadNewslettersFromStorage();
+        }
+
+        function switchToTab(tab) {
+            currentTab = tab;
+            const editorPanel = document.getElementById('editor-panel');
+            const previewPanel = document.getElementById('preview-panel');
+            const editorBtn = document.getElementById('tab-editor-btn');
+            const previewBtn = document.getElementById('tab-preview-btn');
+
+            if (tab === 'editor') {
+                editorPanel.classList.remove('hidden');
+                previewPanel.classList.add('hidden');
+                editorBtn.classList.add('active');
+                previewBtn.classList.remove('active');
+            } else if (tab === 'preview') {
+                editorPanel.classList.add('hidden');
+                previewPanel.classList.remove('hidden');
+                editorBtn.classList.remove('active');
+                previewBtn.classList.add('active');
+            }
+        }
+
+        function showSaveDraftModal() {
+            const existingData = localStorage.getItem(`newsletter_${currentNewsletterId}`);
+            if (existingData) {
+                const data = JSON.parse(existingData);
+                document.getElementById('draftNameInput').value = data.draftName || '';
+            } else {
+                document.getElementById('draftNameInput').value = '';
+            }
+            document.getElementById('save-draft-modal').classList.remove('hidden');
+            document.getElementById('draftNameInput').focus();
+        }
+
+        function closeSaveDraftModal() {
+            document.getElementById('save-draft-modal').classList.add('hidden');
+        }
+
+        function confirmSaveDraft() {
+            const draftName = document.getElementById('draftNameInput').value.trim();
+            if (!draftName) {
+                alert('Please enter a draft name');
+                return;
+            }
+            
+            const articles = [];
+            document.querySelectorAll('.article-section').forEach(section => {
+                const id = section.getAttribute('data-article-id');
+                const layoutType = section.getAttribute('data-layout-type') || 'single';
+                const articleDisplay = document.getElementById(`article-display-${id}`);
+                const displayHTML = articleDisplay ? articleDisplay.innerHTML : '';
+                
+                const titleInput = document.getElementById(`article-title-${id}`);
+                const contentInput = document.getElementById(`article-content-${id}`);
+                
+                articles.push({
+                    id: id,
+                    title: titleInput ? titleInput.value : '',
+                    content: contentInput ? contentInput.value : '',
+                    layoutType: layoutType,
+                    displayHTML: displayHTML
+                });
+            });
+
+            const events = [];
+            document.querySelectorAll('.event-item').forEach(item => {
+                const date = item.querySelector('.event-date').value.trim();
+                const name = item.querySelector('.event-name').value.trim();
+                const details = item.querySelector('.event-details').value.trim();
+                if (date || name || details) {
+                    events.push({ date, name, details });
+                }
+            });
+            
+            const data = {
+                id: currentNewsletterId,
+                draftName: draftName,
+                schoolName: document.getElementById('schoolName').value,
+                newsletterTitle: document.getElementById('newsletterTitle').value,
+                issueDate: document.getElementById('issueDate').value,
+                issueNumber: document.getElementById('issueNumber').value,
+                headlineEnabled: document.getElementById('enableHeadline').checked,
+                headlineText: document.getElementById('headlineText').value,
+                subheadlineText: document.getElementById('subheadlineText').value,
+                articles: articles,
+                eventsSectionTitle: document.getElementById('eventsSectionTitle').value,
+                events: events,
+                contactPhone: document.getElementById('contactPhone').value,
+                contactWebsite: document.getElementById('contactWebsite').value,
+                contactAddress: document.getElementById('contactAddress').value,
+                themeColor: currentTheme,
+                logoDataUrl: logoDataUrl,
+                logoSize: currentLogoSize,
+                heroDataUrl: heroDataUrl,
+                status: 'draft',
+                savedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem(`newsletter_${currentNewsletterId}`, JSON.stringify(data));
+            
+            document.getElementById('editor-title').textContent = draftName;
+            
+            closeSaveDraftModal();
+            showNotification('Draft saved successfully!', 'success');
+        }
+
+        function clearEditorForm() {
+            document.getElementById('schoolName').value = '';
+            document.getElementById('newsletterTitle').value = '';
+            document.getElementById('issueDate').value = '';
+            document.getElementById('issueNumber').value = '';
+            document.getElementById('enableHeadline').checked = false;
+            document.getElementById('headline-controls').classList.add('hidden');
+            document.getElementById('headlineText').value = '';
+            document.getElementById('subheadlineText').value = '';
+            document.getElementById('eventsSectionTitle').value = '';
+            document.getElementById('contactPhone').value = '';
+            document.getElementById('contactWebsite').value = '';
+            document.getElementById('contactAddress').value = '';
+            document.getElementById('eventsContainer').innerHTML = `
+                <div class="event-item bg-gray-50 p-3 rounded-lg border border-gray-200">
+                    <input type="text" placeholder="Event date" class="event-date w-full px-3 py-1 text-sm border border-gray-300 rounded mb-2" oninput="updatePreview()">
+                    <input type="text" placeholder="Event name" class="event-name w-full px-3 py-1 text-sm border border-gray-300 rounded mb-2" oninput="updatePreview()">
+                    <input type="text" placeholder="Event details" class="event-details w-full px-3 py-1 text-sm border border-gray-300 rounded" oninput="updatePreview()">
+                </div>
+            `;
+            document.getElementById('articles-container').innerHTML = '';
+            document.getElementById('articles-display-container').innerHTML = '';
+            logoDataUrl = null;
+            heroDataUrl = null;
+            articleCounter = 0;
+            tableCounter = 0;
+            currentLogoSize = 'medium';
+            const logoContainer = document.getElementById('logo-container');
+            logoContainer.innerHTML = '<i class="fas fa-school text-white text-4xl"></i>';
+            logoContainer.style.width = '120px';
+            logoContainer.style.height = '120px';
+            setLogoSize('medium');
+            document.getElementById('hero-image-container').classList.add('hidden');
+            document.getElementById('editor-title').textContent = 'Newsletter Creator';
+        }
+
+        function loadNewsletterData(id) {
+            const savedData = localStorage.getItem(`newsletter_${id}`);
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                document.getElementById('schoolName').value = data.schoolName || '';
+                document.getElementById('newsletterTitle').value = data.newsletterTitle || '';
+                document.getElementById('issueDate').value = data.issueDate || '';
+                document.getElementById('issueNumber').value = data.issueNumber || '';
+                document.getElementById('enableHeadline').checked = data.headlineEnabled || false;
+                if (data.headlineEnabled) {
+                    document.getElementById('headline-controls').classList.remove('hidden');
+                }
+                document.getElementById('headlineText').value = data.headlineText || '';
+                document.getElementById('subheadlineText').value = data.subheadlineText || '';
+                document.getElementById('eventsSectionTitle').value = data.eventsSectionTitle || '';
+                document.getElementById('contactPhone').value = data.contactPhone || '';
+                document.getElementById('contactWebsite').value = data.contactWebsite || '';
+                document.getElementById('contactAddress').value = data.contactAddress || '';
+                
+                if (data.themeColor) {
+                    setThemeColor(data.themeColor);
+                }
+                
+                if (data.logoSize) {
+                    setLogoSize(data.logoSize);
+                }
+                
+                if (data.logoDataUrl) {
+                    logoDataUrl = data.logoDataUrl;
+                    document.getElementById('logo-container').innerHTML = `<img src="${logoDataUrl}" class="w-full h-full object-cover">`;
+                }
+                
+                if (data.heroDataUrl) {
+                    heroDataUrl = data.heroDataUrl;
+                    document.getElementById('hero-image').src = heroDataUrl;
+                    document.getElementById('hero-image-container').classList.remove('hidden');
+                }
+                
+                document.getElementById('articles-container').innerHTML = '';
+                articleCounter = 0;
+                if (data.articles && data.articles.length > 0) {
+                    data.articles.forEach(article => {
+                        addArticleSection(article, article.layoutType === 'two-column');
+                    });
+                } else {
+                    addArticleSection();
+                }
+                
+                if (data.events && data.events.length > 0) {
+                    document.getElementById('eventsContainer').innerHTML = '';
+                    data.events.forEach(event => {
+                        const eventDiv = document.createElement('div');
+                        eventDiv.className = 'event-item bg-gray-50 p-3 rounded-lg border border-gray-200 relative';
+                        eventDiv.innerHTML = `
+                            <button onclick="this.parentElement.remove(); updatePreview();" class="absolute top-2 right-2 text-red-500 hover:text-red-700">
+                                <i class="fas fa-times"></i>
+                            </button>
+                            <input type="text" placeholder="Event date" class="event-date w-full px-3 py-1 text-sm border border-gray-300 rounded mb-2" value="${event.date}" oninput="updatePreview()">
+                            <input type="text" placeholder="Event name" class="event-name w-full px-3 py-1 text-sm border border-gray-300 rounded mb-2" value="${event.name}" oninput="updatePreview()">
+                            <input type="text" placeholder="Event details" class="event-details w-full px-3 py-1 text-sm border border-gray-300 rounded" value="${event.details}" oninput="updatePreview()">
+                        `;
+                        document.getElementById('eventsContainer').appendChild(eventDiv);
+                    });
+                }
+                
+                document.getElementById('editor-title').textContent = data.draftName || 'Newsletter Creator';
+            }
+        }
+
+        function addArticleSection(articleData = null, twoColumnDefault = false) {
+            articleCounter++;
+            const articleId = articleData ? articleData.id : Date.now() + articleCounter;
+            const layoutType = articleData ? articleData.layoutType : (twoColumnDefault ? 'two-column' : 'single');
+            
+            if (articleData) {
+                articleDataStore[articleId] = articleData;
+            }
+            
+            const container = document.getElementById('articles-container');
+            const section = document.createElement('div');
+            section.className = 'article-section';
+            section.setAttribute('data-article-id', articleId);
+            section.setAttribute('data-layout-type', layoutType);
+            
+            section.innerHTML = `
+                <div class="article-section-header">
+                    <h4 class="font-bold text-gray-800">Article ${articleCounter}</h4>
+                    <div class="article-controls">
+                        <button onclick="removeArticleSection(${articleId})" class="section-control-btn delete">
+                            <i class="fas fa-trash mr-1"></i>Delete
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Article Title</label>
+                        <input type="text" id="article-title-${articleId}" placeholder="Enter article title" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" value="${articleData ? articleData.title : ''}" oninput="updatePreview()">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Layout Style</label>
+                        <div class="layout-toggle">
+                            <button onclick="setArticleLayout(${articleId}, 'single')" class="layout-btn ${layoutType === 'single' ? 'active' : ''}" data-layout="single">
+                                <i class="fas fa-align-left mb-1"></i><br>Single Column
+                            </button>
+                            <button onclick="setArticleLayout(${articleId}, 'two-column')" class="layout-btn ${layoutType === 'two-column' ? 'active' : ''}" data-layout="two-column">
+                                <i class="fas fa-columns mb-1"></i><br>Two Columns
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Article Content</label>
+                        
+                        <textarea id="article-content-${articleId}" rows="8" placeholder="Write your article content here..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 resize-none" oninput="updatePreview()">${articleData ? articleData.content : ''}</textarea>
+                        
+                        <div class="mt-3 grid grid-cols-2 gap-2">
+                            <button onclick="insertImageInArticle(${articleId}, 'left')" class="py-2 bg-blue-100 text-blue-700 rounded text-xs font-semibold hover:bg-blue-200 transition">
+                                <i class="fas fa-image mr-1"></i>Float Left
+                            </button>
+                            <button onclick="insertImageInArticle(${articleId}, 'right')" class="py-2 bg-blue-100 text-blue-700 rounded text-xs font-semibold hover:bg-blue-200 transition">
+                                <i class="fas fa-image mr-1"></i>Float Right
+                            </button>
+                        </div>
+                        
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <button onclick="insertFullWidthImage(${articleId})" class="py-2 bg-purple-100 text-purple-700 rounded text-xs font-semibold hover:bg-purple-200 transition">
+                                <i class="fas fa-expand mr-1"></i>Full Width
+                            </button>
+                            <button onclick="insertGridImages(${articleId})" class="py-2 bg-indigo-100 text-indigo-700 rounded text-xs font-semibold hover:bg-indigo-200 transition">
+                                <i class="fas fa-th mr-1"></i>Image Grid
+                            </button>
+                        </div>
+                        
+                        <div class="mt-2 grid grid-cols-2 gap-2">
+                            <button onclick="openTableModal(${articleId})" class="py-2 bg-green-100 text-green-700 rounded text-xs font-semibold hover:bg-green-200 transition">
+                                <i class="fas fa-table mr-1"></i>Table 1
+                            </button>
+                            <button onclick="openTableModal(${articleId})" class="py-2 bg-green-100 text-green-700 rounded text-xs font-semibold hover:bg-green-200 transition">
+                                <i class="fas fa-table mr-1"></i>Table 2
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(section);
+            
+            if (articleData && articleData.displayHTML) {
+                setTimeout(() => {
+                    const articleDisplay = document.getElementById(`article-display-${articleId}`);
+                    if (articleDisplay) {
+                        articleDisplay.innerHTML = articleData.displayHTML;
+                    }
+                }, 100);
+            }
+        }
+
+        function setArticleLayout(articleId, layoutType) {
+            const section = document.querySelector(`[data-article-id="${articleId}"]`);
+            if (section) {
+                section.setAttribute('data-layout-type', layoutType);
+                
+                const buttons = section.querySelectorAll('.layout-btn');
+                buttons.forEach(btn => {
+                    if (btn.getAttribute('data-layout') === layoutType) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+                
+                updatePreview();
+            }
+        }
+
+        function removeArticleSection(articleId) {
+            const section = document.querySelector(`[data-article-id="${articleId}"]`);
+            if (section) {
+                section.remove();
+                delete articleDataStore[articleId];
+                updatePreview();
+                showNotification('Article section removed', 'success');
+            }
+        }
+
+        function duplicateNewsletter(id) {
+            const savedData = localStorage.getItem(`newsletter_${id}`);
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                const newId = Date.now();
+                data.id = newId;
+                data.draftName = data.draftName + ' (Copy)';
+                data.savedAt = new Date().toISOString();
+                
+                localStorage.setItem(`newsletter_${newId}`, JSON.stringify(data));
+                loadNewslettersFromStorage();
+                showNotification('Newsletter duplicated successfully!', 'success');
+            }
+        }
+
+        function deleteNewsletter(id) {
+            deleteTargetId = id;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+            deleteTargetId = null;
+        }
+
+        function confirmDelete() {
+            if (deleteTargetId) {
+                localStorage.removeItem(`newsletter_${deleteTargetId}`);
+                loadNewslettersFromStorage();
+                closeDeleteModal();
+                showNotification('Newsletter deleted successfully', 'success');
+            }
+        }
+
+        function filterNewsletters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.newsletter-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const date = card.querySelector('.text-gray-500').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || date.includes(searchTerm)) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            const emptyState = document.getElementById('empty-state');
+            const grid = document.getElementById('newsletter-grid');
+            
+            if (visibleCount === 0) {
+                grid.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+            } else {
+                grid.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+            }
+        }
+
+        function sortNewsletters() {
+            const sortValue = document.getElementById('sortSelect').value;
+            const grid = document.getElementById('newsletter-grid');
+            const cards = Array.from(document.querySelectorAll('.newsletter-card'));
+            
+            cards.sort((a, b) => {
+                if (sortValue === 'date-desc') {
+                    return new Date(b.dataset.date) - new Date(a.dataset.date);
+                } else if (sortValue === 'date-asc') {
+                    return new Date(a.dataset.date) - new Date(b.dataset.date);
+                } else if (sortValue === 'title-asc') {
+                    return a.dataset.title.localeCompare(b.dataset.title);
+                } else if (sortValue === 'title-desc') {
+                    return b.dataset.title.localeCompare(a.dataset.title);
+                }
+            });
+            
+            cards.forEach(card => grid.appendChild(card));
+        }
+
+        function selectTableColor(color) {
+            selectedTableColor = color;
+            document.querySelectorAll('.table-color-btn').forEach(btn => {
+                btn.style.borderColor = 'transparent';
+                btn.style.borderWidth = '3px';
+            });
+            const matchingBtn = document.querySelector(`.table-color-btn[data-color="${color}"]`);
+            if (matchingBtn) {
+                matchingBtn.style.borderColor = '#3b82f6';
+                matchingBtn.style.borderWidth = '3px';
+            }
+        }
+
+        function openTableModal(articleId) {
+            currentTableArticleId = articleId;
+            selectedTableColor = '#166534';
+            
+            document.getElementById('table-modal').classList.remove('hidden');
+            document.getElementById('csvTableTitle').value = '';
+            document.getElementById('csvHeaders').value = '';
+            document.getElementById('csvRows').value = '';
+            
+            document.querySelectorAll('.table-color-btn').forEach(btn => {
+                btn.style.borderColor = 'transparent';
+                btn.style.borderWidth = '3px';
+            });
+            const defaultBtn = document.querySelector('.table-color-btn[data-color="#166534"]');
+            if (defaultBtn) {
+                defaultBtn.style.borderColor = '#3b82f6';
+                defaultBtn.style.borderWidth = '3px';
+            }
+        }
+
+        function closeTableModal() {
+            document.getElementById('table-modal').classList.add('hidden');
+        }
+
+        function insertCSVTable() {
+            const title = document.getElementById('csvTableTitle').value.trim();
+            const headersText = document.getElementById('csvHeaders').value.trim();
+            const rowsText = document.getElementById('csvRows').value.trim();
+            
+            if (!headersText) {
+                alert('Please enter table headers');
+                return;
+            }
+            
+            if (!rowsText) {
+                alert('Please enter table rows');
+                return;
+            }
+            
+            const headers = headersText.split(',').map(h => h.trim()).filter(h => h);
+            const rowsArray = rowsText.split('\n').map(row => 
+                row.split(',').map(cell => cell.trim())
+            ).filter(row => row.some(cell => cell));
+            
+            if (headers.length === 0) {
+                alert('Please enter at least one header');
+                return;
+            }
+            
+            if (rowsArray.length === 0) {
+                alert('Please enter at least one row');
+                return;
+            }
+
+            updatePreview();
+            
+            setTimeout(() => {
+                const articleDisplay = document.getElementById(`article-display-${currentTableArticleId}`);
+                if (articleDisplay) {
+                    insertTableIntoArticle(articleDisplay, title, headers, rowsArray);
+                    closeTableModal();
+                    showNotification('Table added! Click cells to edit directly.', 'success');
+                }
+            }, 100);
+        }
+
+        function insertTableIntoArticle(articleDisplay, title, headers, rows) {
+            tableCounter++;
+            
+            const tableWrapper = document.createElement('div');
+            tableWrapper.className = 'table-wrapper';
+            
+            let tableHTML = `<div class="table-label">TABLE ${tableCounter}</div>`;
+            
+            if (title) {
+                tableHTML += `<h4 class="table-title" contenteditable="true">${title}</h4>`;
+            }
+            
+            tableHTML += `
+                <table class="newsletter-table">
+                    <thead style="background: ${selectedTableColor};">
+                        <tr>
+                            ${headers.map(header => `<th contenteditable="true">${header}</th>`).join('')}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${rows.map(row => `
+                            <tr>
+                                ${row.map((cell, idx) => `<td contenteditable="true">${cell || ''}</td>`).join('')}
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            tableWrapper.innerHTML = tableHTML;
+            articleDisplay.appendChild(tableWrapper);
+        }
+
+        function insertImageInArticle(articleId, position) {
+            currentArticleId = articleId;
+            currentImagePosition = position;
+            document.getElementById('hidden-image-upload').click();
+        }
+
+        function insertFullWidthImage(articleId) {
+            currentArticleId = articleId;
+            currentImagePosition = 'full';
+            document.getElementById('hidden-image-upload').click();
+        }
+
+        function insertGridImages(articleId) {
+            currentArticleId = articleId;
+            document.getElementById('hidden-grid-upload').click();
+        }
+
+        document.getElementById('hidden-image-upload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const imageUrl = event.target.result;
+                    
+                    updatePreview();
+                    
+                    setTimeout(() => {
+                        const articleDisplay = document.getElementById(`article-display-${currentArticleId}`);
+                        if (articleDisplay) {
+                            if (currentImagePosition === 'full') {
+                                insertFullWidthImageIntoArticle(articleDisplay, imageUrl);
+                            } else {
+                                insertFloatingImageIntoArticle(articleDisplay, imageUrl, currentImagePosition);
+                            }
+                        }
+                    }, 100);
+                };
+                reader.readAsDataURL(file);
+            }
+            this.value = '';
+        });
+
+        document.getElementById('hidden-grid-upload').addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                const imageUrls = [];
+                let loadedCount = 0;
+                
+                files.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imageUrls[index] = event.target.result;
+                        loadedCount++;
+                        
+                        if (loadedCount === files.length) {
+                            updatePreview();
+                            
+                            setTimeout(() => {
+                                const articleDisplay = document.getElementById(`article-display-${currentArticleId}`);
+                                if (articleDisplay) {
+                                    insertGridImagesIntoArticle(articleDisplay, imageUrls);
+                                }
+                            }, 100);
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+            this.value = '';
+        });
+
+        function insertFloatingImageIntoArticle(articleDisplay, imageUrl, position) {
+            const imageWrapper = document.createElement('div');
+            imageWrapper.className = `image-wrapper float-${position}`;
+            imageWrapper.style.maxWidth = '300px';
+            
+            imageWrapper.innerHTML = `
+                <img src="${imageUrl}" alt="Article image">
+                <div class="image-controls no-print">
+                    <button onclick="changeImageAlign(this.closest('.image-wrapper'), 'left')" class="image-control-btn">
+                        <i class="fas fa-align-left"></i> Left
+                    </button>
+                    <button onclick="changeImageAlign(this.closest('.image-wrapper'), 'right')" class="image-control-btn">
+                        <i class="fas fa-align-right"></i> Right
+                    </button>
+                    <button onclick="resizeImage(this.closest('.image-wrapper'), 'small')" class="image-control-btn">S</button>
+                    <button onclick="resizeImage(this.closest('.image-wrapper'), 'medium')" class="image-control-btn">M</button>
+                    <button onclick="resizeImage(this.closest('.image-wrapper'), 'large')" class="image-control-btn">L</button>
+                    <button onclick="this.closest('.image-wrapper').remove()" class="image-control-btn" style="background: #ef4444; color: white;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            articleDisplay.insertBefore(imageWrapper, articleDisplay.firstChild);
+            showNotification('Image added! Hover to see controls.', 'success');
+        }
+
+        function insertFullWidthImageIntoArticle(articleDisplay, imageUrl) {
+            const imageWrapper = document.createElement('div');
+            imageWrapper.className = 'image-wrapper full-width';
+            
+            imageWrapper.innerHTML = `
+                <img src="${imageUrl}" alt="Full width article image">
+                <div class="image-controls no-print">
+                    <button onclick="this.closest('.image-wrapper').remove()" class="image-control-btn" style="background: #ef4444; color: white;">
+                        <i class="fas fa-times"></i> Delete
+                    </button>
+                </div>
+            `;
+            
+            articleDisplay.appendChild(imageWrapper);
+            showNotification('Full-width image added!', 'success');
+        }
+
+        function insertGridImagesIntoArticle(articleDisplay, imageUrls) {
+            const gridContainer = document.createElement('div');
+            gridContainer.className = 'image-grid';
+            
+            imageUrls.forEach(imageUrl => {
+                const imageWrapper = document.createElement('div');
+                imageWrapper.className = 'image-wrapper';
+                
+                imageWrapper.innerHTML = `
+                    <img src="${imageUrl}" alt="Grid image">
+                    <div class="image-controls no-print">
+                        <button onclick="this.closest('.image-wrapper').remove(); checkEmptyGrid(this)" class="image-control-btn" style="background: #ef4444; color: white;">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                
+                gridContainer.appendChild(imageWrapper);
+            });
+            
+            articleDisplay.appendChild(gridContainer);
+            showNotification('Image grid added!', 'success');
+        }
+
+        function checkEmptyGrid(btn) {
+            const grid = btn.closest('.image-grid');
+            if (grid && grid.children.length === 0) {
+                grid.remove();
+            }
+        }
+
+        function changeImageAlign(wrapper, newAlign) {
+            wrapper.classList.remove('float-left', 'float-right');
+            wrapper.classList.add(`float-${newAlign}`);
+        }
+
+        function resizeImage(wrapper, size) {
+            if (size === 'small') {
+                wrapper.style.maxWidth = '200px';
+            } else if (size === 'medium') {
+                wrapper.style.maxWidth = '300px';
+            } else if (size === 'large') {
+                wrapper.style.maxWidth = '450px';
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('save-notification');
+            const notificationText = document.getElementById('notification-text');
+            notificationText.textContent = message;
+            
+            if (type === 'success') {
+                notification.style.background = '#10b981';
+            } else if (type === 'error') {
+                notification.style.background = '#ef4444';
+            }
+            
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function toggleHeadline() {
+            const checkbox = document.getElementById('enableHeadline');
+            const controls = document.getElementById('headline-controls');
+            const section = document.getElementById('headline-section');
+            
+            if (checkbox.checked) {
+                controls.classList.remove('hidden');
+                section.classList.remove('hidden');
+            } else {
+                controls.classList.add('hidden');
+                section.classList.add('hidden');
+            }
+            updatePreview();
+        }
+
+        function syncFromPreview(fieldId, value) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                if (field.tagName === 'TEXTAREA' || field.tagName === 'INPUT') {
+                    field.value = value;
+                } else {
+                    field.innerHTML = value;
+                }
+            }
+        }
+
+        document.getElementById('logoUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    logoDataUrl = event.target.result;
+                    const logoContainer = document.getElementById('logo-container');
+                    logoContainer.innerHTML = `<img src="${logoDataUrl}" class="w-full h-full object-cover">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('heroUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    heroDataUrl = event.target.result;
+                    const heroContainer = document.getElementById('hero-image-container');
+                    const heroImage = document.getElementById('hero-image');
+                    heroImage.src = heroDataUrl;
+                    heroContainer.classList.remove('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function setThemeColor(color) {
+            currentTheme = color;
+            document.getElementById('header-section').style.backgroundColor = color;
+            document.getElementById('footer-section').style.backgroundColor = color;
+            
+            document.querySelectorAll('.article-title-display').forEach(el => {
+                el.style.color = color;
+            });
+            
+            const dates = document.querySelectorAll('.event-date-display');
+            dates.forEach(el => el.style.color = color);
+
+            document.querySelectorAll('.theme-color-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            const matchingBtn = document.querySelector(`.theme-color-btn[data-color="${color}"]`);
+            if (matchingBtn) {
+                matchingBtn.classList.add('active');
+            }
+        }
+
+        function addEvent() {
+            const container = document.getElementById('eventsContainer');
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'event-item bg-gray-50 p-3 rounded-lg border border-gray-200 relative';
+            eventDiv.innerHTML = `
+                <button onclick="this.parentElement.remove(); updatePreview();" class="absolute top-2 right-2 text-red-500 hover:text-red-700">
+                    <i class="fas fa-times"></i>
+                </button>
+                <input type="text" placeholder="Event date" class="event-date w-full px-3 py-1 text-sm border border-gray-300 rounded mb-2" oninput="updatePreview()">
+                <input type="text" placeholder="Event name" class="event-name w-full px-3 py-1 text-sm border border-gray-300 rounded mb-2" oninput="updatePreview()">
+                <input type="text" placeholder="Event details" class="event-details w-full px-3 py-1 text-sm border border-gray-300 rounded" oninput="updatePreview()">
+            `;
+            container.appendChild(eventDiv);
+        }
+
+        function updatePreview() {
+            const schoolName = document.getElementById('schoolName').value || 'Your School Name';
+            document.getElementById('school-name-display').textContent = schoolName;
+
+            const newsletterTitle = document.getElementById('newsletterTitle').value || 'NEWSLETTER';
+            document.getElementById('newsletter-title-display').textContent = newsletterTitle;
+
+            const issueDate = document.getElementById('issueDate').value || 'MONTH YEAR';
+            document.getElementById('issue-date-display').textContent = issueDate;
+            
+            const issueNumber = document.getElementById('issueNumber').value || '#';
+            document.getElementById('issue-number-display').textContent = issueNumber;
+
+            const headlineEnabled = document.getElementById('enableHeadline').checked;
+            const headlineSection = document.getElementById('headline-section');
+            if (headlineEnabled) {
+                const headlineText = document.getElementById('headlineText').value;
+                const subheadlineText = document.getElementById('subheadlineText').value;
+                
+                if (headlineText || subheadlineText) {
+                    headlineSection.classList.remove('hidden');
+                    document.getElementById('headline-display').textContent = headlineText || '';
+                    document.getElementById('subheadline-display').textContent = subheadlineText || '';
+                } else {
+                    headlineSection.classList.add('hidden');
+                }
+            } else {
+                headlineSection.classList.add('hidden');
+            }
+
+            const articlesDisplayContainer = document.getElementById('articles-display-container');
+            articlesDisplayContainer.innerHTML = '';
+            tableCounter = 0;
+            
+            document.querySelectorAll('.article-section').forEach(section => {
+                const articleId = section.getAttribute('data-article-id');
+                const layoutType = section.getAttribute('data-layout-type') || 'single';
+                
+                const titleInput = document.getElementById(`article-title-${articleId}`);
+                const contentInput = document.getElementById(`article-content-${articleId}`);
+                
+                const title = titleInput ? titleInput.value : '';
+                const content = contentInput ? contentInput.value : '';
+                
+                if (title || content) {
+                    const articleDisplay = document.createElement('article');
+                    articleDisplay.className = 'mb-8';
+                    
+                    const contentClass = layoutType === 'two-column' ? 'article-content-columns drop-cap' : '';
+                    
+                    const contentHTML = content ? content.replace(/\n/g, '</p><p>').replace(/^/, '<p>').replace(/$/, '</p>') : '<p>Your article content will appear here...</p>';
+                    
+                    articleDisplay.innerHTML = `
+                        <h3 class="article-title-display font-serif text-2xl font-bold mb-4 border-b-2 pb-2 inline-block" style="color: ${currentTheme}; border-color: #fbbf24;" contenteditable="true">${title || 'Article Title'}</h3>
+                        <div id="article-display-${articleId}" class="font-sans text-gray-700 text-sm leading-relaxed ${contentClass}">${contentHTML}</div>
+                    `;
+                    articlesDisplayContainer.appendChild(articleDisplay);
+                    
+                    if (articleDataStore[articleId] && articleDataStore[articleId].displayHTML) {
+                        const displayDiv = document.getElementById(`article-display-${articleId}`);
+                        if (displayDiv) {
+                            displayDiv.innerHTML = articleDataStore[articleId].displayHTML;
+                        }
+                    }
+                }
+            });
+
+            const events = [];
+            document.querySelectorAll('.event-item').forEach(item => {
+                const date = item.querySelector('.event-date').value.trim();
+                const name = item.querySelector('.event-name').value.trim();
+                const details = item.querySelector('.event-details').value.trim();
+                if (date || name || details) {
+                    events.push({ date, name, details });
+                }
+            });
+
+            const eventsSidebar = document.getElementById('events-sidebar');
+            const mainContentArea = document.getElementById('main-content-area');
+            const eventsList = document.getElementById('events-list-display');
+            const eventsTitle = document.getElementById('eventsSectionTitle').value || 'Upcoming Events';
+            document.getElementById('events-title-display').innerHTML = `<span class="w-2 h-2 rounded-full mr-2" style="background-color: #fbbf24;"></span>${eventsTitle}`;
+
+            if (events.length > 0) {
+                eventsSidebar.classList.remove('hidden');
+                mainContentArea.classList.remove('md:w-full');
+                mainContentArea.classList.add('md:w-2/3');
+                
+                eventsList.innerHTML = events.map(event => `
+                    <div class="bg-white p-3 rounded shadow-sm border border-gray-100">
+                        ${event.date ? `<div class="font-bold text-xs mb-1 event-date-display" style="color: ${currentTheme};">${event.date}</div>` : ''}
+                        ${event.name ? `<div class="font-serif font-bold text-gray-800 text-sm mb-1">${event.name}</div>` : ''}
+                        ${event.details ? `<div class="text-xs text-gray-500">${event.details}</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                eventsSidebar.classList.add('hidden');
+                mainContentArea.classList.remove('md:w-2/3');
+                mainContentArea.classList.add('md:w-full');
+            }
+
+            const contactPhone = document.getElementById('contactPhone').value;
+            const contactWebsite = document.getElementById('contactWebsite').value;
+            const contactAddress = document.getElementById('contactAddress').value;
+
+            document.getElementById('contact-phone-display').innerHTML = contactPhone ? `<i class="fas fa-phone mr-2"></i>${contactPhone}` : '';
+            document.getElementById('contact-website-display').innerHTML = contactWebsite ? `<i class="fas fa-globe mr-2"></i>${contactWebsite}` : '';
+            document.getElementById('contact-address-display').innerHTML = contactAddress ? `<i class="fas fa-map-marker-alt mr-2"></i>${contactAddress}` : '';
+        }
+
+        function printNewsletter() {
+            showNotification('Preparing to print... Please wait.', 'success');
+            
+            setTimeout(() => {
+                try {
+                    window.print();
+                    showNotification('Print dialog opened!', 'success');
+                } catch (error) {
+                    showNotification('Print error: ' + error.message, 'error');
+                }
+            }, 2000);
+        }
+
+        function downloadPDF() {
+            try {
+                showNotification('Generating PDF...', 'success');
+                
+                const element = document.getElementById('newsletter-page').cloneNode(true);
+                const noPrintElements = element.querySelectorAll('.no-print');
+                noPrintElements.forEach(el => el.remove());
+                
+                const opt = {
+                    margin: 0,
+                    filename: 'newsletter.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                };
+
+                html2pdf().set(opt).from(element).save().then(() => {
+                    showNotification('PDF downloaded successfully!', 'success');
+                }).catch(error => {
+                    showNotification('Error generating PDF: ' + error.message, 'error');
+                });
+            } catch (error) {
+                showNotification('Error: ' + error.message, 'error');
+            }
+        }
+
+        document.getElementById('delete-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+
+        document.getElementById('table-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTableModal();
+            }
+        });
+
+        document.getElementById('template-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeTemplateModal();
+            }
+        });
+
+        document.getElementById('save-draft-modal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSaveDraftModal();
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDeleteModal();
+                closeTableModal();
+                closeTemplateModal();
+                closeSaveDraftModal();
+            }
+            
+            if (e.key === 'Enter' && document.getElementById('save-draft-modal').classList.contains('hidden') === false) {
+                confirmSaveDraft();
+            }
+        });
+
+        window.addEventListener('load', () => {
+            checkAuth();
+        });
+    </script>
+</body>
+</html>
